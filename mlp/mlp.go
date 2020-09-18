@@ -1,4 +1,4 @@
-package main
+package mlp
 
 import (
 	"fmt"
@@ -13,9 +13,9 @@ import (
 
 // Network is a neural network with 3 layers
 type Network struct {
-	inputs        int
+	Inputs        int
 	hiddens       int
-	outputs       int
+	Outputs       int
 	hiddenWeights *mat.Dense
 	outputWeights *mat.Dense
 	learningRate  float64
@@ -24,13 +24,13 @@ type Network struct {
 // CreateNetwork creates a neural network with random weights
 func CreateNetwork(input, hidden, output int, rate float64) (net Network) {
 	net = Network{
-		inputs:       input,
+		Inputs:       input,
 		hiddens:      hidden,
-		outputs:      output,
+		Outputs:      output,
 		learningRate: rate,
 	}
-	net.hiddenWeights = mat.NewDense(net.hiddens, net.inputs, randomArray(net.inputs*net.hiddens, float64(net.inputs)))
-	net.outputWeights = mat.NewDense(net.outputs, net.hiddens, randomArray(net.hiddens*net.outputs, float64(net.hiddens)))
+	net.hiddenWeights = mat.NewDense(net.hiddens, net.Inputs, randomArray(net.Inputs*net.hiddens, float64(net.Inputs)))
+	net.outputWeights = mat.NewDense(net.Outputs, net.hiddens, randomArray(net.hiddens*net.Outputs, float64(net.hiddens)))
 	return
 }
 
@@ -174,7 +174,7 @@ func matrixPrint(X mat.Matrix) {
 	fmt.Printf("%v\n", fa)
 }
 
-func save(net Network) {
+func Save(net Network) {
 	h, err := os.Create("data/hweights.model")
 	defer h.Close()
 	if err == nil {
@@ -188,7 +188,7 @@ func save(net Network) {
 }
 
 // load a neural network from file
-func load(net *Network) {
+func Load(net *Network) {
 	h, err := os.Open("data/hweights.model")
 	defer h.Close()
 	if err == nil {
@@ -206,13 +206,13 @@ func load(net *Network) {
 
 // predict a number from an image
 // image should be 28 x 28 PNG file
-func predictFromImage(net Network, path string) int {
+func PredictFromImage(net Network, path string) int {
 	input := dataFromImage(path)
 	output := net.Predict(input)
 	matrixPrint(output)
 	best := 0
 	highest := 0.0
-	for i := 0; i < net.outputs; i++ {
+	for i := 0; i < net.Outputs; i++ {
 		if output.At(i, 0) > highest {
 			best = i
 			highest = output.At(i, 0)

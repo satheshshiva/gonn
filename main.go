@@ -7,6 +7,7 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"github.com/sausheong/gonn/mlp"
 	"image"
 	"image/png"
 	"io"
@@ -21,7 +22,7 @@ func main() {
 	// 100 hidden nodes - an arbitrary number
 	// 10 outputs - digits 0 to 9
 	// 0.1 is the learning rate
-	net := CreateNetwork(784, 200, 10, 0.1)
+	net := mlp.CreateNetwork(784, 200, 10, 0.1)
 
 	mnist := flag.String("mnist", "", "Either train or predict to evaluate neural network")
 	file := flag.String("file", "", "File name of 28 x 28 PNG file to evaluate")
@@ -31,9 +32,9 @@ func main() {
 	switch *mnist {
 	case "train":
 		mnistTrain(&net)
-		save(net)
+		mlp.Save(net)
 	case "predict":
-		load(&net)
+		mlp.Load(&net)
 		mnistPredict(&net)
 	default:
 		// don't do anything
@@ -44,19 +45,23 @@ func main() {
 		// print the image out nicely on the terminal
 		printImage(getImage(*file))
 		// load the neural network from file
-		load(&net)
+		mlp.Load(&net)
 		// predict which number it is
-		fmt.Println("prediction:", predictFromImage(net, *file))
+		fmt.Println("prediction:", mlp.PredictFromImage(net, *file))
 	}
 
 }
 
-func mnistTrain(net *Network) {
+func mnistTrain(net *mlp.Network) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	t1 := time.Now()
 
 	for epochs := 0; epochs < 5; epochs++ {
-		testFile, _ := os.Open("mnist_dataset/mnist_train.csv")
+		testFile, err := os.Open("mnist_dataset/mnist/mnist_train_100.csv")
+		if err != nil {
+			fmt.Println("cannot open file: error:", err)
+			return
+		}
 		r := csv.NewReader(bufio.NewReader(testFile))
 		for {
 			record, err := r.Read()
@@ -64,7 +69,7 @@ func mnistTrain(net *Network) {
 				break
 			}
 
-			inputs := make([]float64, net.inputs)
+			inputs := make([]float64, net.Inputs)
 			for i := range inputs {
 				x, _ := strconv.ParseFloat(record[i], 64)
 				inputs[i] = (x / 255.0 * 0.999) + 0.001
@@ -85,9 +90,13 @@ func mnistTrain(net *Network) {
 	fmt.Printf("\nTime taken to train: %s\n", elapsed)
 }
 
-func mnistPredict(net *Network) {
+func mnistPredict(net *mlp.Network) {
 	t1 := time.Now()
-	checkFile, _ := os.Open("mnist_dataset/mnist_test.csv")
+	checkFile, err := os.Open("mnist_dataset/mnist/mnist_test_10.csv")
+	if err != nil {
+		fmt.Println("cannot open file: error:", err)
+		return
+	}
 	defer checkFile.Close()
 
 	score := 0
@@ -97,7 +106,7 @@ func mnistPredict(net *Network) {
 		if err == io.EOF {
 			break
 		}
-		inputs := make([]float64, net.inputs)
+		inputs := make([]float64, net.Inputs)
 		for i := range inputs {
 			if i == 0 {
 				inputs[i] = 1.0
@@ -108,7 +117,7 @@ func mnistPredict(net *Network) {
 		outputs := net.Predict(inputs)
 		best := 0
 		highest := 0.0
-		for i := 0; i < net.outputs; i++ {
+		for i := 0; i < net.Outputs; i++ {
 			if outputs.At(i, 0) > highest {
 				best = i
 				highest = outputs.At(i, 0)
