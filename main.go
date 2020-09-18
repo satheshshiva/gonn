@@ -71,7 +71,7 @@ func mnistTrain(net *mlp.Network) {
 
 			inputs := make([]float64, net.Inputs)
 			for i := range inputs {
-				x, _ := strconv.ParseFloat(record[i], 64)
+				x, _ := strconv.ParseFloat(record[i+1], 64)
 				inputs[i] = (x / 255.0 * 0.999) + 0.001
 			}
 
@@ -108,10 +108,7 @@ func mnistPredict(net *mlp.Network) {
 		}
 		inputs := make([]float64, net.Inputs)
 		for i := range inputs {
-			if i == 0 {
-				inputs[i] = 1.0
-			}
-			x, _ := strconv.ParseFloat(record[i], 64)
+			x, _ := strconv.ParseFloat(record[i+1], 64)
 			inputs[i] = (x / 255.0 * 0.999) + 0.001
 		}
 		outputs := net.Predict(inputs)
